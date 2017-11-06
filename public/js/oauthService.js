@@ -1,10 +1,10 @@
 angular.module('pmboard').factory('oauthService', ['$http', '$q', 'userService', function($http, $q, userService) {
   var service = {};
   
-  service.doAuthentication = function() {
+  service.doAuthentication = function(serviceName) {
     return retrieve_token().then(function(res) {
       var token = res.data.token;
-      return authenticate(token);
+      return authenticate(token, serviceName);
     });
   }
   
@@ -12,9 +12,9 @@ angular.module('pmboard').factory('oauthService', ['$http', '$q', 'userService',
     return $http.get('/oauth/token');
   }
   
-  function authenticate(token) {
-  	return $q(function(resolve, reject) {
-    	OAuth.popup('google', {
+  function authenticate(token, serviceName) {
+  	return $q(function(resolve, reject) { // needed bc of OAuth's non-angular promises
+    	OAuth.popup(serviceName, {
     		state: token,
     		// Google requires the following field
     		// to get a refresh token
@@ -22,34 +22,16 @@ angular.module('pmboard').factory('oauthService', ['$http', '$q', 'userService',
     		//  approval_prompt: 'force'
     		//}
     	}).done(function(res) {
-    		$http.post('/oauth/signin', {code: res.code}).then(function(res) {
+    		$http.post('/oauth/signin', {code: res.code, service: serviceName}).then(function(res) {
       		resolve(res.data);
-    		}).catch(function(err) {
-      		reject(err);
+    		}).catch(function(res) {
+      		reject(res.data);
     		});
-  		}).fail(function(err) { // FIXME: I get an origin error, but it doesn't go into my code for some reason upon breakpoint
+  		}).fail(function(err) {
   			reject(err);
 		  });
   	});
   }
-  
-/*
-  function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie != '') {
-      var cookies = document.cookie.split(';');
-      for (var i = 0; i < cookies.length; i++) {
-        var cookie = jQuery.trim(cookies[i]);
-        // Does this cookie string begin with the name we want?
-        if (cookie.substring(0, name.length + 1) == (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
-  }
-*/
   
   return service;
 }]);

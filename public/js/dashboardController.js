@@ -56,16 +56,20 @@ angular.module('pmboard').controller('dashboardController', [
     $scope.loading = false;
   };
   // TODO: get this working without forcing another auth - saved identity token on server???
-  if ($cookies.get('userid') && $cookies.get('oauth')/* && getCookie('XSRF-TOKEN')*/) {
+  var service = 'google';
+  var cookieName = 'oauth:' + service;
+  if ($cookies.get('userid') && $cookies.get(cookieName)/* && getCookie('XSRF-TOKEN')*/) {
     var userId = $cookies.get('userid');
     userService.getUser(userId).then(function(user) {
       init(user);
     });
   } else {
-    oauthService.doAuthentication().then(function(data) {
-      $cookies.put('oauth', data.oauth);
+    oauthService.doAuthentication(service).then(function(data) {
+      $cookies.put(cookieName, data.oauth);
       $cookies.put('userid', data.user._id);
       init(data.user);
+    }).catch(function(err) {
+      console.error(err);
     });
   }
 }]);

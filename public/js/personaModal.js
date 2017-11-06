@@ -108,27 +108,40 @@ angular.module('pmboard').directive('personaModal', [
             }
           }]
         });
-        modal.rendered.then(function() {
+        var reauth = function(serviceName) {
+          return oauthService.doAuthentication(serviceName).then(function(data) {
+            return $cookies.put('oauth:' + serviceName, data.oauth);
+          }).catch(function(err) {
+            throw new Error(err.message);
+          });
+        };
+        var getDriveFiles = function() {
           $scope.loading = true;
-          var oauth = JSON.parse($cookies.get('oauth'));
-          var accessToken = oauth.access_token;
-          $http.get('https://www.googleapis.com/drive/v2/files', {headers: {Authorization: 'Bearer ' + accessToken}})
-            .then(function(res) {
-              $scope.files = res.data.items.filter(function(file) {
-                return evidence.map(function(f) { return f.url; }).indexOf(file.alternateLink) === -1;
-              });
-              $scope.loading = false;
-            })
-            .catch(function(res) {
-              $scope.loading = false;
-              if (res.status === 401) {
-                return oauthService.doAuthentication().then(function(data) {
-                  $cookies.put('oauth', data.oauth);
-                  location.reload(); // TODO: just go back to the modal that's open?
+          var serviceName = 'google_drive';
+          var cookie = $cookies.get('oauth' + serviceName);
+          if (cookie) {
+            var oauth = JSON.parse(cookie);
+            var accessToken = oauth.access_token;
+            return $http.get('https://www.googleapis.com/drive/v2/files', {headers: {Authorization: 'Bearer ' + accessToken}})
+              .then(function(res) {
+                $scope.files = res.data.items.filter(function(file) {
+                  return evidence.map(function(f) { return f.url; }).indexOf(file.alternateLink) === -1;
                 });
-              }
-            });
-        });
+              })
+              .catch(function(res) {
+                if (res.status === 401) {
+                  reauth(serivceName).then(getDriveFiles);
+                }
+              })
+              .finally(function() {
+                $scope.loading = false;
+              });
+          } else {
+            reauth(serviceName).then(getDriveFiles);
+          }
+          
+        };
+        modal.rendered.then(getDriveFiles);
       };
       
       $scope.removeFile = function(persona, fileIx) {

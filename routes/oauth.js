@@ -27,9 +27,10 @@ router.get('/token', function(req, res, next) {
 
 router.post('/signin', function(req, res, next) {
 	var code = req.body.code;
+	var service = req.body.service;
 	var auth;
 	
-	oauth.auth('google', req.session, {
+	oauth.auth(service, req.session, {
 		code: code
 	})
 	.then(function (request_object) {
@@ -37,6 +38,11 @@ router.post('/signin', function(req, res, next) {
 		return request_object.me();
 	})
 	.then(function(guser) {
+  	if (guser && guser.raw && guser.raw.error) {
+    	var err = new Error(guser.raw.error.message);
+      err.status = guser.raw.error.code;
+      return next(err);
+  	}
   	User.findOne({'email': guser.email})
   	  .populate('products', 'name')
   	  .exec(function(err, user) {
