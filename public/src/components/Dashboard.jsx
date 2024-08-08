@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Product } from "../types";
 import ResearchWidget from "./ResearchWidget";
 import useProductAPI from "../hooks/useProductAPI";
@@ -6,9 +6,7 @@ import useOAuthAPI from "../hooks/useOAuthAPI";
 
 /**
  * The container of all widgets
- *
- * @component
- * @returns {JSX.Element} The rendered dashboard.
+ * @returns {React.JSX.Element} The rendered dashboard.
  * @example
  *  <Dashboard>
  *    <Widget>

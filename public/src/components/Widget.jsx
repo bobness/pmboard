@@ -1,14 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Sortable, Plugins } from "@shopify/draggable";
 
-import { WidgetDataItem } from "../types";
+import { EvidenceFile, EvidenceTrend, WidgetDataItem } from "../types";
 import Modal from "./Modal";
 import WidgetItemRow from "./WidgetItemRow";
 
 /**
  * The HTML component for all PMBoard widgets to document and visualize information
- *
- * @param {object} props
+ * @param {object} props The component props
  * @param {WidgetDataItem[] | undefined} props.data The data to show in the widget.
  * @param {string} props.type The type of the data rows.
  * @param {string} props.title The title to show at the top of the widget.
@@ -17,8 +16,10 @@ import WidgetItemRow from "./WidgetItemRow";
  * @param {(itemIndex: number) => void} props.deleteItemFunc The function to call when a new item is deleted.
  * @param {string} props.itemModalId The ID of the item modal passed in `children`.
  * @param {(object) => void} props.updateCollectionFunc The function to call when the order of items is changed.
- * @param {} props.updateTrendFunc The function to call to update an item::evidence::trend.
- * @returns {JSX.Element} The rendered widget.
+ * @param {(personaIndex: number, evidenceIndex: number, trendIndex: number, trend: EvidenceTrend) => Promise<Response>} props.updateTrendFunc The function to call to update an item::evidence::trend.
+ * @param {string} props.summaryTitle The title of the summary tab on the modal.
+ * @param {(itemIndex: number, file: EvidenceFile) => Promise<Response>} props.addItemEvidenceFunc The function to call when an evidence file is added.
+ * @returns {React.JSX.Element} The rendered widget.
  * @example
  * <Widget data={*} type={*} title="*" addItemFunc={*} deleteItemFunc={*} itemModalId="*" />
  */
@@ -32,6 +33,8 @@ const Widget = ({
   itemModalId,
   updateCollectionFunc,
   updateTrendFunc,
+  summaryTitle,
+  addItemEvidenceFunc,
 }) => {
   /**
    * @type {[WidgetDataItem[] | undefined, React.Dispatch<any[]>]}
@@ -61,12 +64,9 @@ const Widget = ({
    */
   const [createDialog, setCreateDialog] = useState();
 
-  /**
-   * @param {React.MouseEvent<HTMLButtonElement, MouseEvent>} event
-   */
-  const showCreateDialog = (event) => {
+  const showCreateDialog = () => {
     /**
-     * @type HTMLDialogElement
+     * @type {HTMLDialogElement}
      */
     const createDialog = document.getElementById("createDialog");
     setCreateDialog(createDialog);
@@ -96,7 +96,7 @@ const Widget = ({
         itemModal.showModal();
       } else {
         /**
-         * @type HTMLDialogElement
+         * @type {HTMLDialogElement}
          */
         const modal = document.getElementById(itemModalId);
         setItemModal(modal);
@@ -126,7 +126,7 @@ const Widget = ({
 
   let currentDragIndex = -1;
   const hr = document.getElementsByTagName("hr")[0];
-  let [draggableListenersAdded, setDraggableListenersAdded] = useState(false);
+  // let [draggableListenersAdded, setDraggableListenersAdded] = useState(false);
   useEffect(() => {
     if (draggable && liveData) {
       draggable.on("drag:start", (event) => {
@@ -157,7 +157,7 @@ const Widget = ({
         hr.style.display = "none";
         currentDragIndex = -1;
       });
-      setDraggableListenersAdded(true);
+      // setDraggableListenersAdded(true);
     }
   }, [draggable, liveData]);
 
@@ -274,6 +274,10 @@ const Widget = ({
               }
             });
           }}
+          summaryTitle={summaryTitle}
+          addItemEvidenceFunc={(file) =>
+            addItemEvidenceFunc(currentItemIndex, file)
+          }
         />
       )}
     </>

@@ -112,7 +112,7 @@ router.get("/:persona_ix/evidence", function (req, res, next) {
 });
 
 // add persona evidence
-router.post("/:persona_ix/evidence", function (req, res, next) {
+router.post("/:persona_ix/evidence", async (req, res, next) => {
   /*
   var err = checkUserAccess(req, 2);
   if (err) return next(err);
@@ -120,30 +120,17 @@ router.post("/:persona_ix/evidence", function (req, res, next) {
 
   var prod = req.product;
   var ix = req.personaIx;
-
-  var ev = {
-    name: req.body.name,
-    url: req.body.url,
-    icon: req.body.icon,
-  };
+  const ev = req.body;
 
   if (!("evidence" in prod.personas[ix])) {
     prod.personas[ix].evidence = [];
   }
   prod.personas[ix].evidence.push(ev);
 
-  return prod.save(function (err) {
-    if (err) {
-      // TODO: convert to next(err)?
-      return res.json({
-        success: false,
-        error: err,
-      });
-    } else {
-      return res.json({
-        success: true,
-      });
-    }
+  await prod.save();
+
+  return res.json({
+    success: true,
   });
 });
 

@@ -1,3 +1,5 @@
+import { Product } from "../types";
+
 const useProductAPI = () => {
   /**
    * @returns {Promise<Product[]>} all products from the server

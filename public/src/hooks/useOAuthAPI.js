@@ -6,11 +6,11 @@ const useOAuthAPI = () => {
   const redirect_uri = "http://localhost:8000";
   const issuer = new URL("https://accounts.google.com");
   /**
-   * @type oauth.AuthorizationServer
+   * @type {oauth.AuthorizationServer}
    */
   let authorizationServer;
   /**
-   * @type string
+   * @type {string}
    */
   let state;
 
@@ -57,9 +57,11 @@ const useOAuthAPI = () => {
 
   /**
    *
-   * @param {URL} url
-   * @param {oauth.Client} client
-   * @param {string} code_verifier
+   * @param {oauth.AuthorizationServer} authorizationServer The server to intract with for OAuth.
+   * @param {oauth.Client} client The oauth client with key/secret details.
+   * @param {string} code_verifier The "password" for the next oauth server communication.
+   * @param {string} state A state token for auth backup.
+   * @returns {string} The access token.
    */
   const getAccessTokenFromGoogle = async (
     authorizationServer,
@@ -70,7 +72,7 @@ const useOAuthAPI = () => {
     // one eternity later, the user lands back on the redirect_uri
     // Authorization Code Grant Request & Response
     /**
-     * @type string
+     * @type {string}
      */
     let access_token;
 
@@ -97,7 +99,7 @@ const useOAuthAPI = () => {
     );
 
     /**
-     * @type oauth.WWWAuthenticateChallenge[] | undefined
+     * @type {oauth.WWWAuthenticateChallenge[] | undefined}
      */
     let challenges;
     if ((challenges = oauth.parseWwwAuthenticateChallenges(response))) {
@@ -139,8 +141,12 @@ const useOAuthAPI = () => {
         )
       )
       .then(async (response) => {
+        if (response.status === 401) {
+          sessionStorage.removeItem("access_token");
+          window.location.reload();
+        }
         /**
-         * @type oauth.WWWAuthenticateChallenge[] | undefined
+         * @type {oauth.WWWAuthenticateChallenge[] | undefined}
          */
         let challenges;
         if ((challenges = oauth.parseWwwAuthenticateChallenges(response))) {
@@ -162,8 +168,8 @@ const useOAuthAPI = () => {
 
   /**
    *
-   * @param {string} access_token
-   * @returns {Promise<GoogleFile[]>}
+   * @param {string} access_token The recently-provided access token to make an API request.
+   * @returns {Promise<GoogleFile[]>} The entire list of files from gdrive.
    */
   const getGoogleDriveFiles = async (access_token) => {
     const files = await getNextPage([], access_token);
@@ -172,13 +178,13 @@ const useOAuthAPI = () => {
 
   /**
    *
-   * @returns {oauth.AuthorizationServer, oauth.Client, string}
+   * @returns {object} The {oauth.AuthorizationServer, oauth.Client, code_verifier} needed for function calls.
    */
   const init = async () => {
     authorizationServer = await getAuthorizationServer();
-    var config = require("../../../config");
+    var config = await import("../../../config");
     /**
-     * @type oauth.Client
+     * @type {oauth.Client}
      */
     client = {
       client_id: config.key,
