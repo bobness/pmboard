@@ -77,6 +77,7 @@ const FileEvidencePane = ({
   const accessToken = useMemo(() => sessionStorage.getItem("access_token"), []);
 
   const allTags = useContext(AllTagsContext);
+  // FIXME: allTags becomes undefined or null after the empathy pane updates them
 
   // update tagsPerFile based on className changes on the summary pane (in allTags)
   useEffect(() => {
@@ -324,11 +325,12 @@ const FileEvidencePane = ({
                           [file.url]: fileTags,
                         });
                       }}
+                      // FIXME: some suggestions are classNames and no id/text
                       // suggestions={allTags
                       //   .filter(
                       //     (tag) =>
-                      //       trendTagsPerFile[file.url] &&
-                      //       !trendTagsPerFile[file.url]
+                      //       tagsPerFile[file.url] &&
+                      //       !tagsPerFile[file.url]
                       //         .map((t) => t.id)
                       //         .includes(tag.id)
                       //   )
@@ -337,6 +339,7 @@ const FileEvidencePane = ({
                       //     text: allTag.id,
                       //     className: allTag.className,
                       //   }))}
+                      // TODO: below, stylize suggestions
                       // renderSuggestion={(item, query) => {}}
                       editable={true}
                       onTagUpdate={(index, newTag) => {

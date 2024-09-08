@@ -125,6 +125,8 @@
  * @param {(tag: ReactTags.Tag, currPos: number, newPos: number) => void} handleDrag A callback to handle drag-n-drop.
  * @param {(className: string, onRemove: React.Component<any>) => React.JSX.Element} removeComponent A component (e.g., X button) to remove a tag.
  * @param {(index: number, event: React.MouseEvent) => void} handleDelete The function to call when deleting a tag.
+ * @param {(evidenceId: number, trend: EvidenceTrend) => Promise<Response>} updateTrendFunc The function to call to update a trend on the server.
+ * @param {object} props.summary The summary data to show on load.
  */
 
 /**

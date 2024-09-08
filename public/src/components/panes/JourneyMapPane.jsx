@@ -6,15 +6,16 @@ import { AllTagsContext } from "../../contexts/AllTagsContext";
 /**
  * A modal pane to show and enable editing of a user journey from research trends/tags.
  * @param {object} props The React component properties.
- * @param {object} props.data The summary data to show on load.
+ * @param {object} props.summary The summary data to show on load.
  * @param {() => void} props.summaryChanged The function to call when the summary is changed (and saved).
  * @returns {React.JSX.Element} The rendered pane.
- * @example <JourneyMapPane data={*} summaryChanged={() => {}} />
+ * @example <JourneyMapPane summary={*} summaryChanged={() => {}} />
  */
-const JourneyMapPane = ({ data, summaryChanged }) => {
+const JourneyMapPane = ({ summaryChanged }) => {
   const allTagsForThisStory = useContext(AllTagsContext);
 
-  const [summary, setSummary] = useState(data);
+  // FIXME: it won't let me add `summary` as a prop and use it here
+  const [summary, setSummary] = useState();
 
   /**
    * @type {[Droppable | undefined, React.Dispatch<Droppable>]}

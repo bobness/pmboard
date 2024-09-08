@@ -2,11 +2,14 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
+import "../hooks/useOAuthAPI";
+jest.mock("../hooks/useOAuthAPI");
+
 import FileEvidencePane from "../components/panes/FileEvidencePane";
 
-// import { mockFacts } from "../hooks/__mocks__/axios";
+import { mockEvidenceFiles } from "../hooks/__mocks__/useOAuthAPI";
 
-describe("FileEvidencePane.js", () => {
+describe("FileEvidencePane.jsx", () => {
   test("Renders mock evidence files", async () => {
     const { container } = render(
       <FileEvidencePane evidence={mockEvidenceFiles} />

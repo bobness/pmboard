@@ -93,23 +93,25 @@ const Modal = ({
     getFlatTagsWithCountsFromEvidence(item.evidence)
   );
 
-  const findTrendInEvidence = useCallback(
+  const findTrendsInEvidence = useCallback(
+    /**
+     * @param {string} tagId the "id" (text) of the ReactTag tag
+     * @returns {{trend: EvidenceTrend, evidenceId: number}[]}
+     */
     (tagId) => {
-      let foundTrend;
-      const evidence = item.evidence.find((ev) => {
-        if (!foundTrend) {
-          const trend = ev.trends.find((t) => t.name === tagId);
-          if (trend) {
-            foundTrend = trend;
-            return true;
-          }
+      const foundTrends = [];
+      item.evidence.forEach((ev) => {
+        const trend = ev.trends.find((t) => t.name === tagId);
+        if (trend) {
+          foundTrends.push({
+            trend,
+            evidenceId: ev.id,
+          });
+          return true;
         }
         return false;
       });
-      return {
-        evidenceId: evidence.id,
-        trend: foundTrend,
-      };
+      return foundTrends;
     },
     [item.evidence]
   );
@@ -170,30 +172,59 @@ const Modal = ({
                           ))}
                         {allTags && allTags.length > 0 && (
                           <SummaryPaneComponent
-                            handleTagClick={(tagIndex, reactTags) => {
-                              const tag = reactTags[tagIndex];
-                              const currentClassIndex = tag.className
-                                ? classNameToIndex[tag.className]
-                                : -1;
-                              const newClassName =
-                                indexToClassName[
-                                  (currentClassIndex + 1) %
-                                    indexToClassName.length
-                                ];
-                              tag.className = newClassName;
-                              setAllTags([...allTags]); // to refresh their className displays
-                              const { evidenceId, trend } = findTrendInEvidence(
-                                tag.id
+                            updateTrendsFunc={async (tagTexts, changes) => {
+                              const changedTrends = [];
+                              await Promise.all(
+                                tagTexts.map(async (tagText) => {
+                                  // remove the (N) occurence part of the tag text
+                                  const tagId = tagText
+                                    .match(/(.*)\(.*\)/)[1]
+                                    .trim();
+                                  const foundTrendInstancesWithSameText =
+                                    findTrendsInEvidence(tagId);
+                                  await Promise.all(
+                                    foundTrendInstancesWithSameText.map(
+                                      (foundTrendInstance) => {
+                                        const updatedTrend = {
+                                          ...foundTrendInstance.trend,
+                                        };
+                                        if (changes.className) {
+                                          updatedTrend.type = changes.className;
+                                        }
+                                        if (changes.id) {
+                                          updatedTrend.name = changes.id;
+                                        }
+                                        // TODO: verify the API changes all aspects of the updatedTrend
+                                        return updateTrendFunc(
+                                          item.id,
+                                          foundTrendInstance.evidenceId,
+                                          updatedTrend
+                                        );
+                                      }
+                                    )
+                                  );
+                                  changedTrends.push(
+                                    ...foundTrendInstancesWithSameText
+                                  );
+                                })
                               );
-                              trend.type = newClassName;
-                              updateTrendFunc(item.id, evidenceId, trend);
+                              setAllTags([
+                                ...allTags.filter(
+                                  (t) => !changedTrends.includes(t)
+                                ),
+                                ...changedTrends.map((changedTrend) => ({
+                                  id: changes.id || changedTrend.name,
+                                  className:
+                                    changes.className || changedTrend.type,
+                                })),
+                              ]);
+                              // FIXME: figure out why the evidence pane doesn't update even though I'm changing evidence
                             }}
-                            // TODO: come up with a better data schema for journeys
                             summaryChanged={(summary) => {
                               item.summary = summary;
                               updateItemFunc(item);
                             }}
-                            data={item.summary}
+                            summary={item.summary}
                           />
                         )}
                       </div>

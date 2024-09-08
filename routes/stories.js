@@ -137,25 +137,22 @@ router.get(
 
 router.post("/:story_id/evidence", addEvidenceExpressFunc("story_id"));
 
-router.param("evidence_ix", trackEvidenceIdExpressFunc("stories", "story_id"));
+router.param("evidence_id", trackEvidenceIdExpressFunc("stories", "story_id"));
 
-router.delete(
-  "/:story_id/evidence/:evidence_ix",
-  deleteEvidenceExpressFunc("stories", "story_id")
-);
+router.delete("/:story_id/evidence/:evidence_id", deleteEvidenceExpressFunc());
 
 router.post(
-  "/:story_id/evidence/:evidence_ix/trends",
+  "/:story_id/evidence/:evidence_id/trends",
   addTrendExpressFunc("stories", "story_id")
 );
 
 router.put(
-  "/:story_id/evidence/:evidence_ix/trends/:trend_ix",
+  "/:story_id/evidence/:evidence_id/trends/:trend_ix",
   updateTrendExpressFunc("stories", "story_id")
 );
 
 router.delete(
-  "/:story_id/evidence/:evidence_ix/trends/:trend_ix",
+  "/:story_id/evidence/:evidence_id/trends/:trend_ix",
   deleteTrendExpressFunc("stories", "story_id")
 );
 

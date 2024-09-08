@@ -54,6 +54,9 @@ const WidgetItemRow = ({ item, onDeleteCallback, onClickCallback }) => {
     return trendTypes.filter((tt) => typeMap[tt]).length === trendTypes.length;
   };
 
+  {
+    /* TODO: change calculation to be just having 1 trend */
+  }
   const numberOfEvidenceCompleted = useMemo(() => {
     if (item && item.evidence) {
       return item.evidence.filter(
@@ -89,7 +92,8 @@ const WidgetItemRow = ({ item, onDeleteCallback, onClickCallback }) => {
       </td>
       <td>
         <span className={`evidence badge ${getEvidenceLabelClass(item)}`}>
-          {numberOfEvidenceCompleted}/{item.evidence.length}
+          {/* {numberOfEvidenceCompleted}/{item.evidence.length} */}
+          {item.evidence.length}
         </span>
       </td>
       <td>

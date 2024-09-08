@@ -18,9 +18,14 @@ const mockEmpathyMapAllTags = [
     text: " tag1",
     className: "objective",
   },
+  {
+    id: "tag2",
+    text: " tag2",
+    className: "goal",
+  },
 ];
 
-describe("EmpathyMapPane.js", () => {
+describe("EmpathyMapPane.jsx", () => {
   test("Renders mock allTags correctly", async () => {
     const { container } = render(
       <AllTagsContext.Provider value={mockEmpathyMapAllTags}>

@@ -30,8 +30,9 @@ const StakeholderEvidencePane = ({
   productId,
   evidence,
   containerModalId,
-  updateEvidenceOnServer,
   allTagsUpdated,
+  addFileFunc,
+  removeFileFunc,
 }) => {
   const ADD_PERSONA_DIALOG_ID = `addPersona: ${containerModalId}`;
   const EMPATHY_MAP_DIALOG_ID = `empathyMap: ${containerModalId}`;
@@ -117,8 +118,8 @@ const StakeholderEvidencePane = ({
           }
         });
         setSelectedTags(
-          selectedPersonaAllTags.filter((tag) =>
-            tag.className.includes("selected")
+          selectedPersonaAllTags.filter(
+            (tag) => tag.className && tag.className.includes("selected")
           )
         );
         setAllTagsForEmpathyMapDialog(selectedPersonaAllTags);
@@ -193,15 +194,16 @@ const StakeholderEvidencePane = ({
      * @example <AddPersonaPane personaSelectedCallback={(persona) => addPersonaAsEvidence(persona)} />
      */
     async (persona) => {
+      const newPersonaAsEvidence = {
+        name: persona.name,
+        persona_id: persona.id,
+      };
       const newPersonasAsEvidence = [
         ...personasAsEvidence,
-        {
-          name: persona.name,
-          persona_id: persona.id,
-        },
+        newPersonaAsEvidence,
       ];
       setPersonasAsEvidence(newPersonasAsEvidence);
-      await updateEvidenceOnServer(newPersonasAsEvidence);
+      await addFileFunc(newPersonaAsEvidence);
 
       document.getElementById("personaFilter").value = "";
       // addPersonaDialog.close();
@@ -215,11 +217,12 @@ const StakeholderEvidencePane = ({
    * @example <Component onClick={() => removePersona(...)} />
    */
   const removePersona = async (persona) => {
+    const pae = personasAsEvidence.find((pae) => pae.name === persona.name);
     const newPersonasAsEvidence = personasAsEvidence.filter(
       (p) => p.name !== persona.name
     );
     setPersonasAsEvidence(newPersonasAsEvidence);
-    await updateEvidenceOnServer(newPersonasAsEvidence);
+    await removeFileFunc(pae.id);
     document.getElementById("personaFilter").value = "";
   };
 
@@ -257,38 +260,37 @@ const StakeholderEvidencePane = ({
       .sort((a, b) => getOccurenceNumber(b.text) - getOccurenceNumber(a.text));
   }, [tagsPerPersona]);
 
-  // update allTags and evidence on the server if there are changes: added tags, edited tags, deleted tags
-  useEffect(() => {
-    if (tagsPerPersona && personasAsEvidence) {
-      let thereAreChangesToTrends = false;
+  // FIXME: update allTags if there are changes: added tags, edited tags, deleted tags
+  // useEffect(() => {
+  //   if (tagsPerPersona && personasAsEvidence) {
+  //     let thereAreChangesToTrends = false;
 
-      Object.keys(tagsPerPersona).forEach((personaName) => {
-        const evidencePersona = personasAsEvidence.find(
-          (p) => p.name === personaName
-        );
-        const tags = tagsPerPersona[personaName];
-        if (tags && tags.length > 0) {
-          const trends = tags.map((tag) => ({
-            name: tag.id,
-            type: tag.className,
-          }));
-          if (
-            getJsonSortedString(evidencePersona.trends) !==
-            getJsonSortedString(trends)
-          ) {
-            evidencePersona.trends = trends;
-            thereAreChangesToTrends = true;
-          }
-        }
-      });
-      if (thereAreChangesToTrends) {
-        const flatTags =
-          getFlatTagsWithCountsFromTagsPerPersona(tagsPerPersona);
-        allTagsUpdated(flatTags);
-        updateEvidenceOnServer(personasAsEvidence);
-      }
-    }
-  }, [tagsPerPersona]);
+  //     Object.keys(tagsPerPersona).forEach((personaName) => {
+  //       const evidencePersona = personasAsEvidence.find(
+  //         (p) => p.name === personaName
+  //       );
+  //       const tags = tagsPerPersona[personaName];
+  //       if (tags && tags.length > 0) {
+  //         const trends = tags.map((tag) => ({
+  //           name: tag.id,
+  //           type: tag.className,
+  //         }));
+  //         if (
+  //           getJsonSortedString(evidencePersona.trends) !==
+  //           getJsonSortedString(trends)
+  //         ) {
+  //           evidencePersona.trends = trends;
+  //           thereAreChangesToTrends = true;
+  //         }
+  //       }
+  //     });
+  //     if (thereAreChangesToTrends) {
+  //       const flatTags =
+  //         getFlatTagsWithCountsFromTagsPerPersona(tagsPerPersona);
+  //       allTagsUpdated(flatTags);
+  //     }
+  //   }
+  // }, [tagsPerPersona]);
 
   return (
     <>
@@ -374,7 +376,12 @@ const StakeholderEvidencePane = ({
           <EmpathyMapPane
             handleTagClick={(tagIndex, reactTags) => {
               const tag = reactTags[tagIndex];
-              setSelectedTags([...selectedTags, tag]);
+              const selectedTagIds = selectedTags.map((t) => t.id);
+              if (selectedTagIds.includes(tag.id)) {
+                setSelectedTags(selectedTags.filter((t) => t.id !== tag.id));
+              } else {
+                setSelectedTags([...selectedTags, tag]);
+              }
             }}
           />
         </AllTagsContext.Provider>
